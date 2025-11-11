@@ -1,11 +1,11 @@
 import './App.css'
-import AuthForm from './pages/UserAuthForm.jsx'
+import AuthCard from './pages/UserAuthForm.jsx'
 
 function App() {
  
   return (
     <div>
-      <AuthForm />
+      <AuthCard />
     </div>
   )
 }
