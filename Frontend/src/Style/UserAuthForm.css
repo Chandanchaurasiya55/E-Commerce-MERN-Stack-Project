@@ -1,0 +1,131 @@
+/* Card container */
+.auth-card {
+  width: min(750px);
+  height: 400px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Left orange semi-circle */
+.auth-left {
+  position: relative;
+  background: #ef5305; 
+}
+
+/* Welcome text inside left side */
+.welcome {
+  position: absolute;
+  left: 10%;
+  top: 40%;
+  transform: translateY(-10%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+.welcome h2 {
+  line-height: 1.25;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* Right side form */
+.auth-right {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  padding: 24px 28px;
+  gap: 12px;
+}
+
+.lock-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e9ecf2;
+}
+.lock-icon img {
+  width: 70px;
+  height: 70px;
+}
+
+.subtitle {
+  margin: 0;
+  color: #393737;
+  font-size: 16px;
+  font-weight: 700;
+  font-style: bold;
+}
+
+.form {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.field input {
+  width: 100%;
+  height: 42px;
+  border: none;
+  outline: none;
+  background: #f1f4f9;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.field input:focus {
+  box-shadow: 0 0 0 3px rgba(255,132,58,.25);
+  background: #eef2f7;
+}
+
+/* Gradient button like screenshot */
+.btn-grad {
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, #ec7332, #f49e0a);
+  color: #fff;
+  transition: transform .08s ease, filter .15s ease;
+}
+
+.btn-grad:hover { filter: brightness(1.03); }
+.btn-grad:active { transform: translateY(1px) scale(0.995); }
+
+.switch {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #484a4c;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #0d6efd;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}
+
+/* Responsive (stack on small screens) */
+@media (max-width: 720px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding-bottom: 18px;
+  }
+  .auth-left {
+    height: 170px;
+  }
+  .welcome { left: 18%; top: 55%; transform: translateY(-50%); }
+}
