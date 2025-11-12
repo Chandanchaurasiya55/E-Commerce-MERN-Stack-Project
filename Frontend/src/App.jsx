@@ -1,11 +1,11 @@
 import './App.css'
-import AuthCard from './pages/UserAuthForm.jsx'
+import AppRoutes from "./Routes/AppRoutes.jsx";  
 
 function App() {
  
   return (
     <div>
-      <AuthCard />
+      <AppRoutes />
     </div>
   )
 }
