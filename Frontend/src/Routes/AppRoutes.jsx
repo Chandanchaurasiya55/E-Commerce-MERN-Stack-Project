@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
 import CartPage from "../Pages/CartPage";
-import UserAuth from "../Pages/UserAuthForm";
-import SellerDashboard from "../pages/SellerDashbord";
+import UserAuth from "../pages/UserAuthForm";
 import UserProfile from "../pages/UserProfile";
-import SellerAuthForm from "../pages/SellerAuthForm";
+
+
 
 const AppRoutes = () => { 
   return (
@@ -14,9 +14,7 @@ const AppRoutes = () => {
             <Route path="/" element={<Home />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/auth" element={<UserAuth />} />
-            <Route path="/seller-auth" element={<SellerAuthForm />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/seller-dashboard" element={<SellerDashboard />} />
           </Routes>
       </Router>
     </div>

@@ -1,11 +1,18 @@
 import './App.css'
-import AppRoutes from "./Routes/AppRoutes.jsx";  
+import AppRoute from "./Routes/AppRoutes.jsx";  
+import { CartProvider } from "./Context/CartContext.jsx";
+import Footer from "./Components/Footer.jsx";
+
 
 function App() {
  
   return (
     <div>
-      <AppRoutes />
+      <CartProvider>
+        <AppRoute />
+        <Footer />
+      </CartProvider>
+      
     </div>
   )
 }

@@ -1,37 +1,63 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import "../Style/Home.css";
 import avatar from "../assets/avtar.png";
+import Products from '../Components/products.jsx';
+import useCart from "../Context/useCart";
+import boy from '../assets/2.jpg' 
+import shirt from '../assets/3.png'
+import dress from '../assets/4.png'
+import dress2 from '../assets/5.png'
+import dress3 from '../assets/6.webp'
+import dress4 from '../assets/6.png'
+
+
+
 
 const API = import.meta.env.VITE_API_URL;
 
 const Home = () => {
   const [search, setSearch] = useState("");
+  const [isSearched, setIsSearched] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const navigate = useNavigate();
+  const { getCartCount } = useCart();
+  const [cartCount, setCartCount] = useState(0);
 
-  // ✅ Check login/seller status from localStorage
+  // All products data
+  const allProducts = [
+    { id: "1", title: "Bag", price: "$19.99", img: boy },
+    { id: "2", title: "Full Shirt", price: "$100.99", img: shirt },
+    { id: "3", title: "sweat shirt", price: "$11.99", img: dress3 },
+    { id: "4", title: "Neaker", price: "$200.99", img: dress2 },
+    { id: "5", title: "Pants", price: "$159.99", img: dress },
+    { id: "7", title: "sweat shirt", price: "$114.99", img: dress3 },
+    { id: "6", title: "Cort", price: "$125.99", img: dress4 },
+    { id: "8", title: "Shirt Pant", price: "$134.99", img: dress2 },
+    { id: "10", title: "Bigg", price: "$345.99", img: dress4 },
+    { id: "9", title: "Cooton pants", price: "$356.99", img: dress },
+    { id: "11", title: "Full Shirt", price: "$788.99", img: dress3 },
+    { id: "12", title: "Navy Shirt", price: "$999.99", img: dress2 },
+  ];
+
+  //check login status and seller status on component mount
   useEffect(() => {
     const userToken = localStorage.getItem("userToken");
     const sellerToken = localStorage.getItem("sellerToken");
     setIsLoggedIn(!!userToken);
     setIsSeller(!!sellerToken);
 
-    // ✅ Listen for storage changes (when user logs in on another tab or page)
+    //  Listen for storage changes (when user logs in on another tab or page)
     const handleStorageChange = () => {
       const updatedUserToken = localStorage.getItem("userToken");
-      const updatedSellerToken = localStorage.getItem("sellerToken");
-      setIsLoggedIn(!!updatedUserToken);
-      setIsSeller(!!updatedSellerToken);
+      setIsLoggedIn(!updatedUserToken);
     };
 
-    // ✅ Listen for custom login event from UserAuthForm
+    // Listen for custom login event from UserAuthForm
     const handleUserLoggedIn = () => {
       const updatedUserToken = localStorage.getItem("userToken");
-      const updatedSellerToken = localStorage.getItem("sellerToken");
       setIsLoggedIn(!!updatedUserToken);
-      setIsSeller(!!updatedSellerToken);
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -43,28 +69,57 @@ const Home = () => {
     };
   }, []);
 
-  // ✅ Become Seller button - Navigate to seller auth
-  const handleBecomeSeller = () => {
-    navigate("/seller-auth");
-  };
+  // Update cart count
+  useEffect(() => {
+    setCartCount(getCartCount());
+  }, [getCartCount]);
 
-  // ✅ Search button
+  // Search button
   const handleSearch = () => {
-    alert(`Searching for: ${search}`);
+    if (search.trim() === "") {
+      alert("Please enter a search term");
+    } else {
+      setIsSearched(true);
+    }
   };
 
-  // ✅ Avatar click → Navigate to profile
+  // Clear search - show all products again
+  const handleClearSearch = () => {
+    setSearch("");
+    setIsSearched(false);
+  };
+
+  // Get filtered products only after search button is clicked
+  const filteredProducts = isSearched 
+    ? allProducts.filter(product =>
+        product.title.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
+
+  //  Avatar click → Navigate to profile
   const handleAvatarClick = () => {
     navigate("/profile");
   };
 
-  // ✅ Login button → navigate to auth
+  //  Login button → navigate to auth
   const handleLoginClick = () => {
     navigate("/auth");
   };
 
+  // Cart button → navigate to cart
+  const HandleCart = () => {
+    navigate("/cart");
+  };
+ 
+const ChatBot = () => {
+  alert("Chat Bot Clicked");
+  const ChatBotWindow = window.open("https://devdoseai.netlify.app", "ChatBot", "width=400,height=600");
+  
+};
+
   return (
-    <nav className="navbar">
+    <>
+    <div className="navbar">
       <div className="nav-left">
         <h2 className="logo" onClick={() => navigate("/")}>
           DevDose Shop
@@ -83,26 +138,21 @@ const Home = () => {
         </button>
       </div>
 
+      <button className="btn" onClick={ChatBot}>Chat Bot</button>
+
       <div className="nav-right">
-        <button className="btn" onClick={() => navigate("/cart")}>
-          🛒 Cart
+        <button className="btn" onClick={HandleCart}>
+          🛒 Cart {cartCount > 0 && <span>({cartCount})</span>}
         </button>
 
-        {/* ✅ Login button visible only when NOT logged in and NOT seller */}
+        {/* Login button visible only when NOT logged in and NOT seller */}
         {!isLoggedIn && !isSeller && (
           <button className="btn" onClick={handleLoginClick}>
             Login
           </button>
         )}
 
-        {/* ✅ Become Seller button visible only when not seller (and not user logged in) */}
-        {!isSeller && !isLoggedIn && (
-          <button className="btn seller-btn" onClick={handleBecomeSeller}>
-            Become a Seller
-          </button>
-        )}
-
-        {/* ✅ Avatar visible only when user logged in (priority over seller) */}
+        {/* Avatar visible only when user logged in (priority over seller) */}
         {isLoggedIn && (
           <img
             src={avatar}
@@ -113,18 +163,46 @@ const Home = () => {
           />
         )}
 
-        {/* ✅ Seller Avatar/Badge visible only when seller logged in (and user not logged in) */}
-        {!isLoggedIn && isSeller && (
-          <img
-            src={avatar}
-            alt="seller avatar"
-            className="avatar seller-avatar"
-            onClick={() => navigate("/seller-dashboard")}
-            title="Seller Dashboard"
-          />
-        )}
       </div>
-    </nav>
+
+  </div>
+  <div className="products-container">
+    {isSearched && filteredProducts.length > 0 && (
+      <div style={{gridColumn: "1 / -1", marginBottom: "20px"}}>
+        <button className="btn" onClick={handleClearSearch} style={{backgroundColor: "#ff7a00", color: "white"}}>
+          ← Back to All Products
+        </button>
+      </div>
+    )}
+    {!isSearched && allProducts.map((product) => (
+      <Products 
+        key={product.id} 
+        id={product.id} 
+        title={product.title} 
+        price={product.price} 
+        img={product.img} 
+      />
+    ))}
+    {isSearched && filteredProducts.length > 0 && filteredProducts.map((product) => (
+      <Products 
+        key={product.id} 
+        id={product.id} 
+        title={product.title} 
+        price={product.price} 
+        img={product.img} 
+      />
+    ))}
+    {isSearched && filteredProducts.length === 0 && (
+      <div className="no-products">
+        <h2>❌ No products found for "{search}"</h2>
+        <p>Try searching with different keywords</p>
+        <button className="btn" onClick={handleClearSearch} style={{marginTop: "20px"}}>
+          ← Back to All Products
+        </button>
+      </div>
+    )}
+  </div>
+  </>
   );
 };
 

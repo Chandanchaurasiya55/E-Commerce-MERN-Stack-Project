@@ -1,0 +1,18 @@
+.Chat{
+   display: flex;
+   align-items: center;
+   flex-direction: column;
+   scroll-behavior: auto;
+   height: 100vh;
+}
+.Chat h2{
+    font-size: 40px;
+    margin-top: 12px;
+}
+.chatbot-container{
+    height: 300px;
+    width: 700px;
+    border: 2px solid black;
+    margin-top: 7rem;
+}
+
