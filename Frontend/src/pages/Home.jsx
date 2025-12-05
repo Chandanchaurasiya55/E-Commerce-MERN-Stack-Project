@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "../Style/Home.css";
 import avatar from "../assets/avtar.png";
+import bannerImg from "../assets/1.png";
 import Products from '../Components/products.jsx';
 import useCart from "../Context/useCart";
 
@@ -157,6 +158,11 @@ const ChatBot = () => {
       </div>
 
   </div>
+    {/* Banner shown above all products */}
+    <div style={{width: '100%'}}>
+      <img src={bannerImg} alt="Home banner" className="home-banner" />
+    </div>
+
     <div className="products-container">
     {isSearched && filteredProducts.length > 0 && (
       <div style={{gridColumn: "1 / -1", marginBottom: "20px"}}>
