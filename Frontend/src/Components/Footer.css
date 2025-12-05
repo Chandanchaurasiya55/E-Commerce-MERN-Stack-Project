@@ -9,8 +9,9 @@
 
 /* Container */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 0 20px;
 }
 
@@ -108,6 +109,12 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 50px;
   margin-bottom: 40px;
+}
+
+/* accent: add left padding to first column and nudge it slightly to the right */
+.footer-grid .footer-column:first-child {
+  padding-left: 16px; /* add some breathing room on the left */
+  transform: translateX(8px); /* shift the column slightly right so it stands out */
 }
 
 .footer-column h4 {
@@ -323,6 +330,12 @@
     gap: 30px;
   }
 
+  /* avoid extra offset on small screens */
+  .footer-grid .footer-column:first-child {
+    padding-left: 8px;
+    transform: none;
+  }
+
   .footer-bottom {
     flex-direction: column;
     text-align: center;
@@ -346,6 +359,7 @@
     grid-template-columns: 1fr;
     gap: 30px;
   }
+  .footer-grid .footer-column:first-child { padding-left: 6px; transform: none; }
 
   .newsletter-text h3 {
     font-size: 20px;

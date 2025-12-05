@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import "../Style/UserAuthForm.css";
 import avatar from "../assets/avtar.png";
 
@@ -8,10 +8,12 @@ const API = import.meta.env.VITE_API_URL;
 export default function AuthForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [authType, setAuthType] = useState("user"); // "user" or "admin"
   const [mode, setMode] = useState("login"); // "login" or "register"
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -50,15 +52,15 @@ export default function AuthForm() {
           ? `${API}/api/auth/user/${mode}`
           : `${API}/api/auth/admin/${mode}`;
 
+      // Build body payload; include Phone only for user registration
+      const payload = { Fullname: fullName, Email: email, Password: password };
+      if (authType === 'user' && mode === 'register') payload.Phone = phone;
+
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          Fullname: fullName,
-          Email: email,
-          Password: password,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -69,6 +71,8 @@ export default function AuthForm() {
         localStorage.setItem("userToken", data.token || data.message);
         localStorage.setItem("userEmail", email);
         localStorage.setItem("userName", fullName || data.user?.Fullname || "User");
+        // store phone if available
+        localStorage.setItem("userPhone", data.user?.Phone || phone || "");
         localStorage.removeItem("adminToken");
         localStorage.removeItem("adminEmail");
         localStorage.removeItem("adminName");
@@ -85,14 +89,21 @@ export default function AuthForm() {
 
       setMessage({ type: "success", text: data.message || "Success!" });
       setTimeout(() => {
+        // support redirecting back to the path provided in location.state.redirectTo (e.g., /checkout)
+        const redirectTo = location?.state?.redirectTo;
         if (authType === "user") {
-          navigate("/");
+          navigate(redirectTo || "/");
         } else {
           navigate("/admin-dashboard");
         }
       }, 1000);
     } catch (err) {
-      setMessage({ type: "error", text: err.message || "Something went wrong" });
+      // Show better error when network fails (Failed to fetch)
+      const msg = (err && err.message && err.message.includes('Failed to fetch'))
+        ? `Cannot reach server at ${API}. Make sure backend is running.`
+        : (err && err.message) || 'Something went wrong';
+      console.error('AuthForm submit error:', err);
+      setMessage({ type: "error", text: msg });
     } finally {
       setLoading(false);
     }
@@ -105,7 +116,7 @@ export default function AuthForm() {
           <div className="welcome">
             <h2>
               {authType === "user"
-                ? "Welcome to the\nDEVDOSE Community!..."
+                ? "Welcome to the\nKHIYANSH COMPUTER!..."
                 : "Welcome to\nAdmin Panel"}
             </h2>
           </div>
@@ -198,6 +209,20 @@ export default function AuthForm() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
+            {/* show phone field only when registering a user (not admin) */}
+            {mode === "register" && authType === "user" && (
+              <div className="field">
+                <input
+                  type="tel"
+                  placeholder="Phone Number (10 digits)"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                />
+              </div>
+            )}
 
             <div className="field">
               <input

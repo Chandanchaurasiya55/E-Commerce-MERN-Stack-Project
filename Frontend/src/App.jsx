@@ -1,7 +1,6 @@
 import './App.css'
 import AppRoute from "./Routes/AppRoutes.jsx";  
 import { CartProvider } from "./Context/CartContext.jsx";
-import Footer from "./Components/Footer.jsx";
 
 
 function App() {
@@ -10,7 +9,6 @@ function App() {
     <div>
       <CartProvider>
         <AppRoute />
-        <Footer />
       </CartProvider>
       
     </div>

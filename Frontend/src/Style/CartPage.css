@@ -1,6 +1,7 @@
 .CartPage {
-  max-width: 1200px;
-  margin: 0px auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 20px;
 }
 

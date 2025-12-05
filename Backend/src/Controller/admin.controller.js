@@ -6,6 +6,11 @@ async function registerAdmin(req, res) {
   try {
     const { Fullname, Email, Password } = req.body;
 
+    // Basic validation
+    if (!Fullname || !Email || !Password) {
+      return res.status(400).json({ message: 'Fullname, Email and Password are required' });
+    }
+
     // Check if any admin already exists (only one admin allowed)
     const adminCount = await Admin.countDocuments();
     if (adminCount > 0) {
@@ -32,6 +37,12 @@ async function registerAdmin(req, res) {
       Password: hashedPassword
     });
 
+    // Ensure JWT secret is present
+    if (!process.env.JWT_SECRET) {
+      console.error('registerAdmin error: JWT_SECRET is not set in environment');
+      return res.status(500).json({ message: 'Server misconfiguration (missing JWT_SECRET)' });
+    }
+
     // Generate token
     const token = jwt.sign({ id: newAdmin._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
@@ -47,14 +58,20 @@ async function registerAdmin(req, res) {
       }
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    console.error('registerAdmin error:', err);
+    return res.status(500).json({ message: "Server error while registering admin" });
   }
 }
 
 async function loginAdmin(req, res) {
   try {
-    const { Email, password } = req.body;
+    // Accept either `password` (frontend) or `Password` (some clients)
+    const { Email, password, Password } = req.body || {};
+    const inputPassword = password || Password;
+
+    if (!Email || !inputPassword) {
+      return res.status(400).json({ message: 'Please provide both Email and Password' });
+    }
 
     // Check if admin exists
     const admin = await Admin.findOne({ Email });
@@ -64,12 +81,22 @@ async function loginAdmin(req, res) {
       });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, admin.Password);
+    // Verify password - use the resolved inputPassword (handles both `password` and `Password` keys)
+    if (typeof inputPassword !== 'string' || inputPassword.trim().length === 0) {
+      console.warn(`loginAdmin warning: invalid password input for Email=${Email}`);
+      return res.status(400).json({ message: 'Invalid Email or Password' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(inputPassword, admin.Password);
     if (!isPasswordValid) {
-      return res.status(400).json({
-        message: "Invalid Email or Password"
-      });
+      console.warn(`loginAdmin warning: authentication failed for Email=${Email}`);
+      return res.status(401).json({ message: "Invalid Email or Password" });
+    }
+
+    // Ensure JWT secret is present
+    if (!process.env.JWT_SECRET) {
+      console.error('loginAdmin error: JWT_SECRET is not set in environment');
+      return res.status(500).json({ message: 'Server misconfiguration (missing JWT_SECRET)' });
     }
 
     // Generate token
@@ -87,8 +114,8 @@ async function loginAdmin(req, res) {
       }
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    console.error('loginAdmin error:', err);
+    return res.status(500).json({ message: "Server error while logging in admin" });
   }
 }
 

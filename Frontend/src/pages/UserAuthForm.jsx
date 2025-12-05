@@ -79,7 +79,11 @@ export default function AuthCard() {
         setTimeout(() => navigate("/"), 1000);
       }
     } catch (err) {
-      setMessage({ type: "error", text: err.message || "Something went wrong" });
+      const msg = (err && err.message && err.message.includes('Failed to fetch'))
+        ? `Cannot reach server at ${API}. Make sure backend is running.`
+        : (err && err.message) || 'Something went wrong';
+      console.error('UserAuthForm submit error:', err);
+      setMessage({ type: "error", text: msg });
     } finally {
       setLoading(false);
     }

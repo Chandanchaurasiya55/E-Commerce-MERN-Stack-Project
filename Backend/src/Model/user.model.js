@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema({
         required: [true, "Password is required"],
         minlength: [8, "Password must be at least 8 characters"]
     },
+        // cart will store products added by the user
+        cart: [
+            {
+                product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+                quantity: { type: Number, default: 1 }
+            }
+        ],
      createdAt: {
         type: Date,
         default: Date.now   // Automatically current date/time set karega

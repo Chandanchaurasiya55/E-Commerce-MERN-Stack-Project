@@ -1,31 +1,37 @@
-const userdata = require('../Controller/auth.controller');
+const jwt = require('jsonwebtoken');
 const userModel = require('../Model/user.model');
 
+// Middleware to authenticate a user using JWT token
+async function authenticateUser(req, res, next) {
+    try {
+        // Try to read token from Authorization header (Bearer) first
+        let token = null;
+        const authHeader = req.headers?.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
 
-async function authenticateUser(res, req, next){
+        // Fallback: cookies (if cookie-parser is used)
+        if (!token && req.cookies && req.cookies.token) {
+            token = req.cookies.token;
+        }
 
-    const token = res.cookie.token;
+        if (!token) {
+            return res.status(401).json({ message: 'Please login first' });
+        }
 
-    if(!token){
-        res.status(401).json({
-            Message: "please login first!..."
-        })
-    }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userModel.findById(decoded.id).select('-Password');
+        if (!user) return res.status(401).json({ message: 'User not found' });
 
-    try{
-        const decode = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await userModel.findById(decoded.id);
-        req.user = user
-        next()
-
-    }
-    catch(err){
-        return res.status(401).json({
-            message: "Invalid token"
-        })
-
+        req.user = user; // attach user to request
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
     }
 }
+
+module.exports = authenticateUser;
 
 
 

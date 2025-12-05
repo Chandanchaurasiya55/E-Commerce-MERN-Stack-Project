@@ -1,15 +1,13 @@
 const Product = require('../Model/product.model');
 
-// Simple seller check: require header 'x-seller-key' to match env SELLER_KEY
+// Product controller
+// NOTE: Previously this endpoint required a seller secret key header (x-seller-key).
+// The requirement has been removed and uploads are allowed without that header.
 async function createProduct(req, res) {
   try {
-    const sellerKey = req.headers['x-seller-key'];
-    if (!process.env.SELLER_KEY) {
-      return res.status(500).json({ message: 'Seller key not configured on server' });
-    }
-    if (!sellerKey || sellerKey !== process.env.SELLER_KEY) {
-      return res.status(401).json({ message: 'Unauthorized: invalid seller key' });
-    }
+    // NOTE: seller key check removed — uploads allowed without an x-seller-key header.
+    // If you want to re-introduce optional verification, check process.env.SELLER_KEY
+    // and validate the header only if a value is present.
 
     const { title, price, img } = req.body;
     if (!title || !price) {
@@ -34,7 +32,24 @@ async function getProducts(req, res) {
   }
 }
 
+// Admin: delete a product by id
+async function deleteProduct(req, res) {
+  try {
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ message: 'Product id required' });
+
+    const deleted = await Product.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'Product not found' });
+
+    return res.status(200).json({ message: 'Product deleted', product: deleted });
+  } catch (err) {
+    console.error('deleteProduct error', err);
+    return res.status(500).json({ message: 'Server error while deleting product' });
+  }
+}
+
 module.exports = {
   createProduct,
   getProducts,
+  deleteProduct,
 };

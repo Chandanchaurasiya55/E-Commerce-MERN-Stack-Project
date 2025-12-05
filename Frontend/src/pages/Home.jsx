@@ -4,15 +4,6 @@ import "../Style/Home.css";
 import avatar from "../assets/avtar.png";
 import Products from '../Components/products.jsx';
 import useCart from "../Context/useCart";
-import boy from '../assets/2.jpg' 
-import shirt from '../assets/3.png'
-import dress from '../assets/4.png'
-import dress2 from '../assets/5.png'
-import dress3 from '../assets/6.webp'
-import dress4 from '../assets/6.png'
-
-
-
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -122,7 +113,7 @@ const ChatBot = () => {
     <div className="navbar">
       <div className="nav-left">
         <h2 className="logo" onClick={() => navigate("/")}>
-          DevDose Shop
+          KHIYANSH COMPUTER
         </h2>
       </div>
 

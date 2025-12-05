@@ -8,16 +8,27 @@ const CartPage = () => {
   const navigate = useNavigate();
 
   
-  const { cartItems, removeFromCart, updateQuantity, getTotalPrice } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const [checkoutLoading, setCheckoutLoading] = React.useState(false);
+  const [checkoutMsg, setCheckoutMsg] = React.useState('');
 
-  const handleRemove = (productId) => {
-    removeFromCart(productId);
+
+  const handleRemove = async (productId) => {
+    try {
+      await removeFromCart(productId);
+    } catch (err) {
+      alert(err?.message || 'Failed to remove item');
+    }
   };
 
-  const handleQuantityChange = (productId, newQuantity) => {
+  const handleQuantityChange = async (productId, newQuantity) => {
     const quantity = parseInt(newQuantity);
     if (quantity > 0) {
-      updateQuantity(productId, quantity);
+      try {
+        await updateQuantity(productId, quantity);
+      } catch (err) {
+        alert(err?.message || 'Failed to update quantity');
+      }
     }
   };
 
@@ -94,7 +105,27 @@ const CartPage = () => {
               <span>Total:</span>
               <span>${getTotalPrice().toFixed(2)}</span>
             </div>
-            <button className="checkoutBtn">Proceed to Checkout</button>
+            <button className="checkoutBtn" onClick={async () => {
+              // Navigate to dedicated checkout page where user fills address + payment
+              setCheckoutLoading(true);
+              setCheckoutMsg('');
+              try {
+                const token = localStorage.getItem('userToken');
+                if (!token) {
+                  // not logged in → redirect to auth/login page and tell Auth to send user back to /checkout after login
+                  navigate('/auth', { state: { redirectTo: '/checkout' } });
+                  return;
+                }
+                navigate('/checkout');
+              } catch (err) {
+                setCheckoutMsg(err?.message || 'Please login to checkout');
+              } finally {
+                setCheckoutLoading(false);
+              }
+            }}>{checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}</button>
+            {checkoutMsg && <div style={{marginTop:8, fontSize:13}}>{checkoutMsg}</div>}
+            
+            {/* Shipping + payment will be collected on /checkout page */}
             <button className="continueShopping" onClick={() => navigate("/")}>
               Continue Shopping
             </button>

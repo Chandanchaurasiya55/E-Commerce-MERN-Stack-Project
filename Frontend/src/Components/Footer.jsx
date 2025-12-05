@@ -50,22 +50,22 @@ export default function Footer() {
           <div className="footer-grid">
             {/* Company Info */}
             <div className="footer-column">
-              <h4>DevDose Shop</h4>
+              <h4>KHIYANSH COMPUTER</h4>
               <p className="company-desc">
                 Your one-stop destination for premium products at unbeatable prices.
               </p>
               <div className="contact-info">
                 <div className="contact-item">
                   <FaMapMarkerAlt className="icon" />
-                  <span>123 Market Street, NY 10001</span>
+                  <span>Lamachor, Haldwani 263139</span>
                 </div>
                 <div className="contact-item">
                   <FaPhone className="icon" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>+91 9639087092</span>
                 </div>
                 <div className="contact-item">
                   <FaEnvelope className="icon" />
-                  <span>support@DevDose.com</span>
+                  <span>khiyanshcomputer@outlook.com</span>
                 </div>
               </div>
             </div>
@@ -107,14 +107,11 @@ export default function Footer() {
               {/* Social Media */}
               <h4 style={{ marginTop: '20px' }}>Follow Us</h4>
               <div className="social-icons">
-                <a href="https://www.facebook.com/chandan.chaursiya.9883" target="_blank"  className="social-icon" title="Facebook">
+                <a href="https://www.facebook.com/Khiyanshcomputer/" target="_blank"  className="social-icon" title="Facebook">
                   <FaFacebook />
                 </a>
-                <a href="https://www.instagram.com/chaurasiya_chandan55/" target="_blank"  className="social-icon" title="Instagram">
+                <a href="https://www.instagram.com/khiyanshcomputer?igsh=ZDYxZ3B1eXJyNmEw" target="_blank"  className="social-icon" title="Instagram">
                   <FaInstagram />
-                </a>
-                <a href="https://www.linkedin.com/in/chandanchaurasiya-dev/" target="_blank" className="social-icon" title="LinkedIn">
-                  <FaLinkedin />
                 </a>
               </div>
             </div>
@@ -125,7 +122,7 @@ export default function Footer() {
 
           {/* Bottom Footer */}
           <div className="footer-bottom">
-            <p className="copyright">© 2024 DevDose Shop. All rights reserved.</p>
+            <p className="copyright">© 2025 KHIYANSH COMPUTER. All rights reserved.</p>
             <div className="bottom-links">
               <a href="#">Sitemap</a>
               <a href="#">Accessibility</a>

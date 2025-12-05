@@ -4,9 +4,37 @@
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
 }
+html, body {
+    /* prevent horizontal overflow across the whole app */
+    overflow-x: hidden;
+}
+
 body {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    min-height: 100vh;
     background: #edeae9;
 }
+
+/* container to center all top-level page content */
+.site-container{
+    /* make the site wrapper full width so pages can use the full viewport */
+    width:100%;
+    max-width: none;
+    margin: 0; /* no horizontal centering */
+    padding:20px 18px;
+}
+
+/* ensure images and iframes cannot exceed their container width */
+img, iframe, video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* helper to allow true full-bleed sections if desired */
+.site-container.full-bleed{padding-left:0;padding-right:0}
+
+/* small helper to center child components vertically/horizontally */
+.center-all{display:flex;align-items:center;justify-content:center}
+
 

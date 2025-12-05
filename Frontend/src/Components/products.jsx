@@ -1,9 +1,11 @@
 import React from 'react'
 import '../Style/products.css'
 import useCart from '../Context/useCart'
+import { useNavigate } from 'react-router-dom';
 
 const Products = ({ product }) => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = () => {
     const item = {
@@ -12,8 +14,20 @@ const Products = ({ product }) => {
       price: product.price,
       img: product.img,
     };
-    addToCart(item);
-    alert(`${product.title} added to cart!`);
+    (async () => {
+      try {
+        await addToCart(item);
+        alert(`${product.title} added to cart!`);
+      } catch (err) {
+        if (err?.message && err.message.toLowerCase().includes('login')) {
+          if (window.confirm('You must be logged in to add items to cart. Go to login page?')) {
+            navigate('/auth');
+          }
+        } else {
+          alert(err?.message || 'Could not add to cart');
+        }
+      }
+    })();
   };
 
   return (
