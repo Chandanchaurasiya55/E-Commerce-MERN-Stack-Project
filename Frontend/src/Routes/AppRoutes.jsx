@@ -6,6 +6,7 @@ import UserProfile from "../pages/UserProfile";
 import SellerUpload from "../pages/SellerUpload";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminOrders from "../pages/AdminOrders";
+import Orders from "../pages/Orders";
 import CheckoutPage from "../pages/CheckoutPage";
 import ProtectedAdminRoute from "../Components/ProtectedAdminRoute";
 
@@ -36,6 +37,7 @@ const AppRoutes = () => {
             <Route path="/seller" element={<ProtectedAdminRoute><SellerUpload /></ProtectedAdminRoute>} />
             <Route path="/admin-dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
             <Route path="/admin-orders" element={<ProtectedAdminRoute><AdminOrders /></ProtectedAdminRoute>} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/checkout" element={<CheckoutPage />} />
           </Route>
         </Routes>

@@ -17,7 +17,6 @@ const Products = ({ product }) => {
     (async () => {
       try {
         await addToCart(item);
-        alert(`${product.title} added to cart!`);
       } catch (err) {
         if (err?.message && err.message.toLowerCase().includes('login')) {
           if (window.confirm('You must be logged in to add items to cart. Go to login page?')) {

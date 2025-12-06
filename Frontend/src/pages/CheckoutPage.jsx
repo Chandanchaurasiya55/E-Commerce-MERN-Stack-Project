@@ -65,6 +65,13 @@ const CheckoutPage = () => {
     }
   };
 
+  const parsePrice = (price) => {
+    if (price == null) return 0;
+    if (typeof price === 'number') return price;
+    const cleaned = String(price).replace(/[^0-9.-]+/g, '');
+    return parseFloat(cleaned) || 0;
+  };
+
   return (
     <div className="checkout-page">
       <div className="checkout-header">
@@ -170,9 +177,9 @@ const CheckoutPage = () => {
                     <div className="thumb"><img src={it.img} alt={it.title} /></div>
                     <div className="meta">
                       <div className="title">{it.title}</div>
-                      <div className="opts">{it.quantity} × ${parseFloat(String(it.price).replace('$','')).toFixed(2)}</div>
+                      <div className="opts">{it.quantity || 1} × ${parsePrice(it.price).toFixed(2)}</div>
                     </div>
-                    <div className="item-price">${(parseFloat(String(it.price).replace('$','')) * it.quantity).toFixed(2)}</div>
+                    <div className="item-price">${(parsePrice(it.price) * (it.quantity || 1)).toFixed(2)}</div>
                   </div>
                 ))
               )}

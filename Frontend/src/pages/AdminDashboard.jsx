@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../Style/AdminDashboard.css';
+// reuse admin orders styles for compact cards + modal
+import '../Style/AdminOrders.css';
 
 const AdminDashboard = () => {
   const [adminName, setAdminName] = useState('');
@@ -29,6 +31,45 @@ const AdminDashboard = () => {
 
   const [recentProducts, setRecentProducts] = useState([]);
   const [loadingRecent, setLoadingRecent] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [statusLoadingId, setStatusLoadingId] = useState(null);
+  const [orderStatusDrafts, setOrderStatusDrafts] = useState({});
+
+  const updateStatus = async (id, newStatus) => {
+    try {
+      setStatusLoadingId(id);
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) throw new Error('Admin login required');
+      const API = import.meta.env.VITE_API_URL;
+      const res = await fetch(`${API}/api/order/admin/order/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Failed to update order');
+
+      // update local lists
+      setOrders(prev => prev.map(x => String(x._id) === String(id) ? (data.order || { ...x, status: newStatus }) : x));
+      setProductOrders(prev => prev.map(x => String(x._id) === String(id) ? (data.order || { ...x, status: newStatus }) : x));
+      if (selectedOrder && String(selectedOrder._id) === String(id)) {
+        setSelectedOrder(data.order || { ...selectedOrder, status: newStatus });
+      }
+
+      return true;
+    } catch (err) {
+      alert(err?.message || 'Failed to update status');
+      return false;
+    } finally {
+      setStatusLoadingId(null);
+    }
+  };
+  const [productOrders, setProductOrders] = useState([]);
+  const [productOrdersLoading, setProductOrdersLoading] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [systemStatus, setSystemStatus] = useState({ dbConnected: false, paymentConfigured: false, emailConfigured: false });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -79,6 +120,28 @@ const AdminDashboard = () => {
     };
 
     fetchRecent();
+
+    // fetch recent/ongoing orders for quick admin access
+    const fetchOrders = async () => {
+      const API = import.meta.env.VITE_API_URL;
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) return;
+      try {
+        setOrdersLoading(true);
+        const res = await fetch(`${API}/api/order/admin/orders`, { headers: { Authorization: `Bearer ${adminToken}` } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return console.error('Failed loading admin orders', data);
+
+        // show only ongoing orders (placed/shipped) and keep most recent 6
+        const ongoing = (data.orders || []).filter(o => !['delivered', 'cancelled'].includes(String(o.status || '').toLowerCase()));
+        setOrders(ongoing.slice(0, 6));
+      } catch (err) {
+        console.error('Admin dashboard: fetch orders failed', err);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+    fetchOrders();
 
     // fetch system status
     const fetchStatus = async () => {
@@ -150,8 +213,32 @@ const AdminDashboard = () => {
                         </div>
                       ) : null}
                     </div>
-                    <div className="actions">
-                      <button className="btn-sm" onClick={() => navigate(`/admin-orders?highlight=${p.id}`)}>Edit</button>
+                          <div className="actions">
+                            <button className="btn-sm" onClick={() => navigate(`/admin-orders?highlight=${p.id}`)}>Edit</button>
+                            <button
+                              className="btn-sm"
+                              onClick={async () => {
+                                // show orders that include this product
+                                setSelectedProduct(p);
+                                setProductOrdersLoading(true);
+                                try {
+                                  const API = import.meta.env.VITE_API_URL;
+                                  const adminToken = localStorage.getItem('adminToken');
+                                  if (!adminToken) return alert('Admin login required');
+                                  const res = await fetch(`${API}/api/order/admin/orders`, { headers: { Authorization: `Bearer ${adminToken}` } });
+                                  const data = await res.json().catch(() => ({}));
+                                  if (!res.ok) return alert('Failed to load orders for this product');
+                                  // filter orders having this product id inside items
+                                  const matches = (data.orders || []).filter(o => (o.items || []).some(it => String(it.product) === String(p.id) || String(it.productId) === String(p.id)));
+                                  setProductOrders(matches.slice(0, 12));
+                                } catch (err) {
+                                  console.error('fetch product orders failed', err);
+                                  alert('Error loading product orders');
+                                } finally {
+                                  setProductOrdersLoading(false);
+                                }
+                              }}
+                            >View Orders</button>
                       <button
                         className="btn-sm btn-danger"
                         onClick={async () => {
@@ -210,6 +297,200 @@ const AdminDashboard = () => {
             </div>
           </div>
         </section>
+
+        {/* Ongoing orders quick peek */}
+        <section className="card" style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <h3 className="card-title">Ongoing Orders</h3>
+          {ordersLoading ? (
+            <div>Loading orders…</div>
+          ) : orders.length === 0 ? (
+            <div style={{ color: '#64748b' }}>No ongoing orders at the moment.</div>
+          ) : (
+            <div className="orders-list compact-row" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))' }}>
+              {orders.map(o => (
+                <article key={o._id} className={`order-card ${String(o.status || '').toLowerCase()}`}>
+                  <section className="card-header">
+                    <div className="header-left">
+                      <div className="avatar" title={o.user?.Fullname || o.user?.Email || 'Customer'}>
+                        {(o.user?.Fullname || o.user?.Email || 'U').toString().split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase()
+                        }
+                      </div>
+                      <div className="order-id">#{String(o._id).slice(-8)}</div>
+                      <div className="order-meta">
+                        <div className="user-name">{o.user?.Fullname || o.user?.Email || 'Unknown'}</div>
+                        <div className="user-email smallish">{o.user?.Email}</div>
+                      </div>
+                    </div>
+                    <div className="header-right">
+                      <div className="order-date">{new Date(o.createdAt).toLocaleString()}</div>
+                      <div className={`status-mini ${String(o.status || '').toLowerCase()}`}>{String(o.status || 'pending').charAt(0).toUpperCase() + String(o.status || 'pending').slice(1)}</div>
+                    </div>
+                  </section>
+
+                  <footer className="card-footer">
+                    <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                      <select
+                        value={orderStatusDrafts[o._id] ?? (o.status || 'placed')}
+                        onChange={(e) => setOrderStatusDrafts(prev => ({ ...prev, [o._id]: e.target.value }))}
+                        style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }}
+                      >
+                        <option value="placed">Placed</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      <button className="btn" onClick={async () => {
+                        const newStatus = orderStatusDrafts[o._id] ?? (o.status || 'placed');
+                        const ok = await updateStatus(o._id, newStatus);
+                        if (ok) setOrderStatusDrafts(prev => { const copy = { ...prev }; delete copy[o._id]; return copy; });
+                      }} disabled={statusLoadingId === o._id}>
+                        {statusLoadingId === o._id ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
+                    <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                      <div className={`status-pill ${String(o.status || '').toLowerCase()}`}>
+                        {String(o.status || 'pending').charAt(0).toUpperCase() + String(o.status || 'pending').slice(1)}
+                      </div>
+                    </div>
+                    <div className="footer-actions">
+                      <button className="btn-view" onClick={() => { setSelectedOrder(o); setOrderModalOpen(true); }}>View</button>
+                      <button className="btn-sm" onClick={() => { navigator?.clipboard?.writeText?.(String(o._id)); alert('Order id copied') }}>Copy</button>
+                    </div>
+                  </footer>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Product-specific orders (shown after clicking 'View Orders' on a product) */}
+        {selectedProduct ? (
+          <section className="card" style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <h3 className="card-title">Orders for "{selectedProduct.title || selectedProduct.id}"</h3>
+            {productOrdersLoading ? (
+              <div>Loading orders…</div>
+            ) : productOrders.length === 0 ? (
+              <div style={{ color: '#64748b' }}>No orders found for this product.</div>
+            ) : (
+              <div className="orders-row" style={{ padding:'8px 0' }}>
+                {productOrders.map(o => (
+                  <article key={o._id} className={`order-card compact ${String(o.status || '').toLowerCase()}`} style={{ display:'flex', flexDirection:'column' }}>
+                    <section className="card-header">
+                      <div className="header-left">
+                        <div className="avatar" title={o.user?.Fullname || o.user?.Email || 'Customer'}>
+                          {(o.user?.Fullname || o.user?.Email || 'U').toString().split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase()}
+                        </div>
+                        <div className="order-id">#{String(o._id).slice(-8)}</div>
+                        <div className="order-meta">
+                          <div className="user-name">{o.user?.Fullname || o.user?.Email || 'Unknown'}</div>
+                          <div className="user-email smallish">{o.user?.Email}</div>
+                        </div>
+                      </div>
+                    </section>
+                    <div style={{ padding: 12 }}>
+                      <div style={{marginBottom:8}}>Total: <strong>${o.totalAmount?.toFixed?.(2) ?? o.totalAmount}</strong></div>
+                      <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center'}}>
+                        <select
+                          value={orderStatusDrafts[o._id] ?? (o.status || 'placed')}
+                          onChange={(e) => setOrderStatusDrafts(prev => ({ ...prev, [o._id]: e.target.value }))}
+                          style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }}
+                        >
+                          <option value="placed">Placed</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button className="btn" onClick={async () => {
+                          const newStatus = orderStatusDrafts[o._id] ?? (o.status || 'placed');
+                          const ok = await updateStatus(o._id, newStatus);
+                          if (ok) setOrderStatusDrafts(prev => { const copy = { ...prev }; delete copy[o._id]; return copy; });
+                        }} disabled={statusLoadingId === o._id}>{statusLoadingId === o._id ? 'Saving...' : 'Save'}</button>
+                        <button className="btn-view" onClick={() => { setSelectedOrder(o); setOrderModalOpen(true); }}>View</button>
+                        <button className="btn-sm" onClick={() => { navigator?.clipboard?.writeText?.(String(o._id)); alert('Order id copied') }}>Copy</button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+            <div style={{marginTop:12,fontSize:13}}>
+              <button className="btn-ghost" onClick={() => { setSelectedProduct(null); setProductOrders([]); }}>Close product orders</button>
+            </div>
+          </section>
+        ) : null}
+
+        {/* order details modal */}
+        {orderModalOpen && selectedOrder && (
+          <div className="order-modal-overlay" onClick={() => setOrderModalOpen(false)}>
+            <div className="order-modal" onClick={e => e.stopPropagation()}>
+              <div className="om-header">
+                <div className="om-left">
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <div className="order-id">#{String(selectedOrder._id).slice(-8)}</div>
+                    <button className="copy-id" onClick={() => { navigator?.clipboard?.writeText?.(String(selectedOrder._id)); alert('Order ID copied') }} title="Copy ID">Copy ID</button>
+                  </div>
+                  <div className="order-date">{new Date(selectedOrder.createdAt).toLocaleString()}</div>
+                </div>
+                <div className="om-actions">
+                  <select value={selectedOrder.status ?? 'placed'} onChange={(e) => setSelectedOrder({ ...selectedOrder, status: e.target.value })}>
+                    <option value="placed">Placed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <button className="btn primary" onClick={() => updateStatus(selectedOrder._id, selectedOrder.status)} disabled={statusLoadingId === selectedOrder._id}>{statusLoadingId === selectedOrder._id ? 'Saving...' : 'Save'}</button>
+                  <button className="btn-ghost" onClick={() => setOrderModalOpen(false)}>Close</button>
+                </div>
+              </div>
+
+              <div className="om-body">
+                <div className="om-col">
+                  <div className="panel">
+                    <div className="panel-title">Items</div>
+                    {selectedOrder.items?.map(it => (
+                      <div key={String(it.product)} className="om-item-row">
+                        <div className="om-item-thumb"><img src={it.img || it.image || '/placeholder.png'} alt={it.title} /></div>
+                        <div className="om-item-body">
+                          <div className="om-item-title">{it.title}</div>
+                          <div className="om-item-sub">{it.quantity} × ${parseFloat(String(it.price).replace(/[^0-9.-]+/g,''))?.toFixed?.(2)}</div>
+                        </div>
+                        <div className="om-item-total">${(parseFloat(String(it.price).replace(/[^0-9.-]+/g,'')) * (it.quantity || 1)).toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="panel" style={{marginTop:12}}>
+                    <div className="panel-title">Shipping</div>
+                    {selectedOrder.shippingAddress ? (
+                      <div style={{marginTop:8}}>
+                        <div>{selectedOrder.shippingAddress.name}</div>
+                        <div>{selectedOrder.shippingAddress.street}</div>
+                        <div>{[selectedOrder.shippingAddress.city, selectedOrder.shippingAddress.state].filter(Boolean).join(', ')} {selectedOrder.shippingAddress.postalCode || ''}</div>
+                        <div>{selectedOrder.shippingAddress.country}</div>
+                        {selectedOrder.shippingAddress.phone && <div>📞 {selectedOrder.shippingAddress.phone}</div>}
+                      </div>
+                    ) : <div className="muted">No shipping info</div>}
+                  </div>
+                </div>
+
+                <div className="om-col">
+                  <div className="panel">
+                    <div className="panel-title">Order Summary</div>
+                    <div style={{marginTop:8,fontSize:16,fontWeight:800}}>${selectedOrder.totalAmount?.toFixed?.(2) ?? selectedOrder.totalAmount}</div>
+                    <div style={{marginTop:10}}><strong>Payment:</strong> {selectedOrder.paymentMethod}</div>
+                    <div style={{marginTop:10}}><strong>By:</strong> {selectedOrder.user?.Fullname || selectedOrder.user?.Email || 'Unknown'}</div>
+                  </div>
+
+                  <div className="panel" style={{marginTop:12}}>
+                    <div className="panel-title">Activity</div>
+                    <div style={{marginTop:8,fontSize:13,color:'#6b7280'}}>Created at: {new Date(selectedOrder.createdAt).toLocaleString()}</div>
+                    <div style={{marginTop:6,fontSize:13,color:'#6b7280'}}>Order ID: {String(selectedOrder._id)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <footer className="admin-footer">© {new Date().getFullYear()} E‑Store • Admin panel</footer>
       </main>

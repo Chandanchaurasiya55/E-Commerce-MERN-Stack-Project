@@ -130,10 +130,10 @@ const ChatBot = () => {
         </button>
       </div>
 
-      <button className="btn" onClick={ChatBot}>Chat Bot</button>
-
       <div className="nav-right">
-        <button className="btn" onClick={HandleCart}>
+        {/* Move Chat Bot button next to Cart */}
+        <button className="btn chat-btn" onClick={ChatBot}>Chat Bot</button>
+        <button className="btn cart-btn" onClick={HandleCart}>
           🛒 Cart {cartCount > 0 && <span>({cartCount})</span>}
         </button>
 

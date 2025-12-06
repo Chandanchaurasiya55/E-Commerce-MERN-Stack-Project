@@ -111,6 +111,7 @@ const UserProfile = () => {
         </div>
 
         <div className="profile-actions">
+          <button className="btn-action" onClick={() => navigate('/orders')}>📦 Your Orders</button>
           {isSeller && (
             <button
               className="btn-action seller-btn"

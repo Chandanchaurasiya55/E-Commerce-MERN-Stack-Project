@@ -118,7 +118,21 @@ async function getAllOrders(req, res) {
   }
 }
 
-module.exports = { checkout, getRecentOrders, getAllOrders };
+// User: get own orders
+async function getUserOrders(req, res) {
+  try {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
+    return res.status(200).json({ orders });
+  } catch (err) {
+    console.error('getUserOrders error', err);
+    return res.status(500).json({ message: 'Server error while fetching user orders' });
+  }
+}
+
+module.exports = { checkout, getRecentOrders, getAllOrders, getUserOrders };
 
 // Admin: delete an order by id
 async function deleteOrder(req, res) {
@@ -136,5 +150,23 @@ async function deleteOrder(req, res) {
   }
 }
 
+// Admin: update order status (e.g. placed -> shipped -> delivered)
+async function updateOrderStatus(req, res) {
+  try {
+    const id = req.params.id;
+    const newStatus = req.body?.status;
+    if (!id) return res.status(400).json({ message: 'Order id required' });
+    if (!newStatus) return res.status(400).json({ message: 'New status required' });
+
+    const updated = await Order.findByIdAndUpdate(id, { status: newStatus }, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Order not found' });
+
+    return res.status(200).json({ message: 'Order updated', order: updated });
+  } catch (err) {
+    console.error('updateOrderStatus error', err);
+    return res.status(500).json({ message: 'Server error while updating order' });
+  }
+}
+
 // export deletion
-module.exports = { checkout, getRecentOrders, getAllOrders, deleteOrder };
+module.exports = { checkout, getRecentOrders, getAllOrders, getUserOrders, deleteOrder, updateOrderStatus };

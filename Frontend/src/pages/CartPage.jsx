@@ -32,6 +32,17 @@ const CartPage = () => {
     }
   };
 
+  // small helper to safely parse various price formats
+  const parsePrice = (price) => {
+    if (price == null) return 0;
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') {
+      const cleaned = price.replace(/[^0-9.-]+/g, '');
+      return parseFloat(cleaned) || 0;
+    }
+    return 0;
+  };
+
   return (
     <div className="CartPage">
       <h1>Your Cart 🛒</h1>
@@ -54,7 +65,7 @@ const CartPage = () => {
                 
                 <div className="cartItemContent">
                   <div className="cartItemHeader">
-                    <h3 className="cartItemTitle">{item.title}</h3>
+                    <h3 className="cartItemTitle">{item.title || 'Untitled product'}</h3>
                     <button
                       className="removeBtn"
                       onClick={() => handleRemove(item.id)}
@@ -64,7 +75,7 @@ const CartPage = () => {
                     </button>
                   </div>
 
-                  <p className="cartItemPrice">{item.price}</p>
+                  <p className="cartItemPrice">{typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : (item.price || '$0.00')}</p>
 
                   <div className="cartItemFooter">
                     <div className="cartItemQuantity">
@@ -73,7 +84,7 @@ const CartPage = () => {
                         id={`qty-${item.id}`}
                         type="number"
                         min="1"
-                        value={item.quantity}
+                        value={item.quantity || 1}
                         onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                         className="quantityInput"
                       />
@@ -82,7 +93,7 @@ const CartPage = () => {
                     <div className="cartItemTotal">
                       <span className="totalLabel">Total:</span>
                       <span className="totalPrice">
-                        ${(parseFloat(item.price.replace("$", "")) * item.quantity).toFixed(2)}
+                        ${(parsePrice(item.price) * (item.quantity || 1)).toFixed(2)}
                       </span>
                     </div>
                   </div>
